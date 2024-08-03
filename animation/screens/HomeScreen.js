@@ -1,14 +1,36 @@
-import { Manrope_200ExtraLight, Manrope_300Light, Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold, useFonts } from '@expo-google-fonts/manrope';
+import {
+  Manrope_200ExtraLight,
+  Manrope_300Light,
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+  useFonts,
+} from '@expo-google-fonts/manrope';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
-import { ImageBackground, KeyboardAvoidingView, Modal, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  ImageBackground,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import PsgButton from '../components/PsgButton';
 import { useGlobalContext } from '../context/globalContext';
 import Colours from '../util/Colours';
 
 const HomeScreen = () => {
-  // Load fonts
   let [fontsLoaded] = useFonts({
     Manrope_200ExtraLight,
     Manrope_300Light,
@@ -20,34 +42,48 @@ const HomeScreen = () => {
   });
 
   const Navigation = useNavigation();
-
-  
   const [modalVisible, setModalVisible] = useState(false);
   const [collegeID, setCollegeID] = useState('');
   const [password, setPassword] = useState('');
-
-  
   const { login } = useGlobalContext();
 
+  const handleLogin = async () => {
+    await Navigation.navigate('Dummy');
+  };
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const savedCollegeID = await AsyncStorage.getItem('collegeID');
+        const savedPassword = await AsyncStorage.getItem('password');
+        if (savedCollegeID && savedPassword) {
+          const valid = await login(savedCollegeID, savedPassword);
+          if (valid === true) {
+            handleLogin();
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    checkSession();
+  }, []);
 
   if (!fontsLoaded) {
     return null;
   }
 
-  
   const toggleModal = () => {
     setModalVisible(!modalVisible);
   };
 
-  
-  const handleLogin = () => {
-    Navigation.navigate('Dummy')
-  };
 
-  
   const validateLogin = async () => {
     const valid = await login(collegeID, password);
-    if (valid == true) {
+    if (valid === true) {
+      await AsyncStorage.setItem('collegeID', collegeID);
+      await AsyncStorage.setItem('password', password);
       handleLogin();
     } else if (valid === 'invalidPWD') {
       
@@ -66,7 +102,7 @@ const HomeScreen = () => {
           enabled={false}
         >
           <ImageBackground
-            source={require("../assets/images/psg.jpg")}
+            source={require('../assets/images/psg.jpg')}
             style={styles.backgroundContainer}
             imageStyle={styles.backgroundImage}
           >
@@ -127,13 +163,13 @@ const HomeScreen = () => {
                   value={password}
                   onChangeText={setPassword}
                 />
-                <Pressable onPress={validateLogin}>
+                <TouchableOpacity onPress={validateLogin}>
                   <PsgButton
                     style={{ backgroundColor: 'white' }}
                     textStyle={{ color: Colours.DarkBlue100, fontWeight: 'bold', fontSize: 20 }}
                     title="Sign Up"
                   />
-                </Pressable>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -144,6 +180,8 @@ const HomeScreen = () => {
 };
 
 export default HomeScreen;
+
+
 
 const styles = StyleSheet.create({
   safeArea: {
